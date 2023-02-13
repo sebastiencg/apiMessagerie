@@ -1,6 +1,7 @@
 let newCompte= document.querySelector('#boutonNewCompte')
 let messagerie= document.querySelector('#boutonMessagerie')
 let connection= document.querySelector('#boutonConnection')
+let inputPost=document.querySelector('#inputPost')
 let body= document.querySelector('#body')
 let token= null;
 newCompte.addEventListener('click',()=>{
@@ -35,6 +36,7 @@ function printConnection(){
 </div>
     `
     body.innerHTML=template
+    inputPost.innerHTML=""
     //-------------------------------------
     let username=document.querySelector('.username')
     let password=document.querySelector('.password')
@@ -62,7 +64,7 @@ function printConnection(){
                 console.log(donnee.token)
                 token=donnee.token
                 if (token){
-                    alert("bienvenu "+donnee.username)
+                    alert("bienvenu")
                 }
                 else {
                     alert("erreur recommencer ou creer un nouveau compte")
@@ -81,6 +83,7 @@ function printNewCompte(){
 </div>
     `
     body.innerHTML=template
+    inputPost.innerHTML=""
     //----------------------------------
     let username=document.querySelector('.username')
     let password=document.querySelector('.password')
@@ -112,13 +115,52 @@ function printNewCompte(){
 
 }
 function printMessageries(){
-    /*if(!token){
-        alert("connecte toi ou crée un compte ")
-        connection.classList.add("arriere")
-        newCompte.classList.remove("arriere")
-        messagerie.classList.remove("arriere")
-        printConnection()
-    }*/
+    body.innerHTML=""
+    connection.classList.remove("arriere")
+    newCompte.classList.remove("arriere")
+    messagerie.classList.add("arriere")
+    let template=`
+    <div class="mb-3">
+  <label for="newPost" class="form-label">Example textarea</label>
+  <textarea class="form-control" id="newPost" rows="3"></textarea>
+<button class="btn btn-secondary" id="send">envoyer</button>
+</div>
+
+    `
+    inputPost.innerHTML=template
+    //----------------creation new post-----------------------
+
+    let send=document.querySelector('#send')
+
+    let newPost=document.querySelector('#newPost')
+
+    send.addEventListener('click',()=>{
+
+        let url="https://droppingstuff.imatrythis.tk/b1devweb/api/post"
+
+        let data = {
+            content : newPost.value,
+        }
+
+        let elementSerialise = JSON.stringify(data)
+
+        let fetchParametre = {
+            headers:{"Content-Type":"application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            method : "POST",
+            body: elementSerialise
+
+        }
+
+        fetch(url,fetchParametre)
+            .then((donnees)=>(donnees.json()))
+            .then(donnee=>{
+                console.log(donnee)
+            })
+
+    })
+    //--------------- fetch afficher les posts------------
 
     let url="https://droppingstuff.imatrythis.tk/b1devweb/api/posts"
 
@@ -128,26 +170,47 @@ function printMessageries(){
     }
 
     fetch(url,fetchParametre)
-            .then((donnees) => (donnees.json()))
-            .then(donnee => {
-                let posts = donnee['hydra:member']
-                console.log(posts[0]['user'].username)
-                posts.forEach(post=>{
-                    printPost(post);
-                })
-            })
-
-    function printPost(post){
-        template=` 
-         <div class="position-relative m-4">
-            <h4> auteur :${post['user'].username}</h4>
-
+        .then((donnees) => (donnees.json()))
+        .then(donnee => {
+            let posts = donnee['hydra:member']
+            posts.forEach(post=>{
+                template=` 
+         <div class="position-relative m-4 bg-primary-subtle">
+            <h4> auteur : ${post['user'].username}</h4>
             <p>${post.content}</p>
+            <input type="hidden" value="${post.id}" id="postId">
+            <button  class="btn btn-danger " id="delete">supprimer</button>
         </div>
         `
-        body.innerHTML+=template;
 
-    }
+                body.innerHTML+=template;                })
+
+
+            //-------------delete-----------------
+            let supprimer =document.querySelector('#delete')
+            let postId= document.querySelector('#postId')
+
+            supprimer.addEventListener('click',()=>{
+
+                let url=`https://droppingstuff.imatrythis.tk/b1devweb/api/posts/${postId.value}`
+
+
+
+                let fetchParametre = {
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+                    method : "DELETE",
+                }
+
+                fetch(url,fetchParametre)
+                    .then((donnees)=>(donnees.json()))
+                    .then(donnee=>{
+                        console.log(donnee)
+                    })
+                console.log(postId.value)
+            })
+        })
 
 }
 
